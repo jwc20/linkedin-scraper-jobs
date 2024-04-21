@@ -18,9 +18,7 @@ in pkgs.mkShell rec {
             ignoreCollisions = true;
             extraLibs = with pkgs.python3.pkgs; [
                 beautifulsoup4
-                lxml
-                python-dotenv
-                requests
+                pandas
                 selenium
             ];
         })
