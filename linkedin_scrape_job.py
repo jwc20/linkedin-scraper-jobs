@@ -17,6 +17,8 @@ now = datetime.now()
 date_time_format = now.strftime("%Y%m%d_%H%M%S")
 output_filename = f"li_data_{date_time_format}.csv"
 
+save_directory = f"/home/cjw/scraped_data/linkedin/{output_filename}"
+
 
 # Function to scrape LinkedIn job postings and extract skills
 def scrape_linkedin_jobs(keyword, num_pages):
@@ -179,8 +181,9 @@ if __name__ == "__main__":
     keyword = "software%20engineer"
     num_pages = 10  # You can adjust the number of pages to scrape
 
+    print("Starting LinkedIn scraper.")
     scraped_jobs = scrape_linkedin_jobs(keyword, num_pages)
-    scraped_jobs.to_csv(output_filename, index=False)
+    scraped_jobs.to_csv(save_directory, index=False)
 
     # flattened_skills = [skill for sublist in scraped_jobs for skill in sublist]
     # skill_counts = Counter(flattened_skills)
