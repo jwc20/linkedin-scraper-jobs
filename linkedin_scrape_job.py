@@ -1,7 +1,7 @@
 #! /usr/bin/python3.10
 
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+# from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 # from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
@@ -38,8 +38,9 @@ def scrape_linkedin_jobs(keyword, num_pages):
 
     # Set up options for the Chrome WebDriver
     options = webdriver.ChromeOptions()
-    # options.add_argument("--headless")
+    options.add_argument("--headless")  # Run Chrome in headless mode (optional)
     options.add_argument("--no-sandbox")
+    options.add_argument("--user-data-dir=chrome-data")  # save cookies
 
     # Start a Selenium WebDriver with options
     driver = webdriver.Chrome(options=options)
@@ -47,10 +48,8 @@ def scrape_linkedin_jobs(keyword, num_pages):
     # for entry-level:  "f_E=2"
     # for remote: "f_WT=2"
     # &f_E=1%2C2%2C3&f_WT=2&
-    extra_param="f_E=1%2C2%2C3&f_TPR=r2592000&f_WT=2"
-    url = (
-        f"https://www.linkedin.com/jobs/search/?keywords={keyword}&{extra_param}"
-    )
+    extra_param = "f_E=1%2C2%2C3&f_TPR=r2592000&f_WT=2"
+    url = f"https://www.linkedin.com/jobs/search/?keywords={keyword}&{extra_param}"
     driver.get(url)
     # j = 0
     # # Scroll to load more jobs (you may need to adjust the number of scrolls)
@@ -59,7 +58,7 @@ def scrape_linkedin_jobs(keyword, num_pages):
     #     j = j + 1
     #     driver.find_element(By.TAG_NAME, "body").send_keys(Keys.END)
     #     sleep(5)  # Wait for content to load
-    
+
     scroll_down(driver, 5)
 
     # Extract job titles and skills (modify as needed)
@@ -101,9 +100,8 @@ def scrape_linkedin_jobs(keyword, num_pages):
             # extract skills from description
             extracted_skills = extract_skills(job_description)
 
-
             print(f"Job Title: {job_title}, Company: {company_name}")
-            
+
             results = results._append(
                 {
                     "company_name": company_name,
@@ -205,9 +203,9 @@ if __name__ == "__main__":
 
     print("Starting LinkedIn scraper.")
     scraped_jobs = scrape_linkedin_jobs(keyword, num_pages)
-    
+
     print(scraped_jobs)
-    
+
     scraped_jobs.to_csv(save_directory, index=False)
 
     # flattened_skills = [skill for sublist in scraped_jobs for skill in sublist]
