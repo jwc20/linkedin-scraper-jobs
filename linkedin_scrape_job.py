@@ -3,7 +3,7 @@
 from selenium import webdriver
 # from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-# from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
@@ -20,6 +20,9 @@ date_time_format = now.strftime("%Y%m%d_%H%M%S")
 output_filename = f"li_data_{date_time_format}.csv"
 
 save_directory = f"/home/cjw/scraped_data/linkedin/{output_filename}"
+
+
+ignore_companies = ["minware", "HireMeFast LLC", "SynergisticIT", "Get It Recruit - Information Technology"]
 
 
 # Function to scrape LinkedIn job postings and extract skills
@@ -40,7 +43,7 @@ def scrape_linkedin_jobs(keyword, num_pages):
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")  # Run Chrome in headless mode (optional)
     options.add_argument("--no-sandbox")
-    options.add_argument("--user-data-dir=chrome-data")  # save cookies
+    # options.add_argument("--user-data-dir=chrome-data")  # save cookies
 
     # Start a Selenium WebDriver with options
     driver = webdriver.Chrome(options=options)
@@ -48,18 +51,22 @@ def scrape_linkedin_jobs(keyword, num_pages):
     # for entry-level:  "f_E=2"
     # for remote: "f_WT=2"
     # &f_E=1%2C2%2C3&f_WT=2&
-    extra_param = "f_E=1%2C2%2C3&f_TPR=r2592000&f_WT=2"
+    # posted within 24 hours: f_TPR=r86400
+    extra_param = "f_E=1%2C2%2C3&f_TPR=r2592000&f_WT=2&f_TPR=r86400"
     url = f"https://www.linkedin.com/jobs/search/?keywords={keyword}&{extra_param}"
     driver.get(url)
-    # j = 0
-    # # Scroll to load more jobs (you may need to adjust the number of scrolls)
+    
+    print(url)
+    
+    j = 0
+    # Scroll to load more jobs (you may need to adjust the number of scrolls)
     # for _ in range(num_pages):
     #     # print("scroll ######", j)
     #     j = j + 1
     #     driver.find_element(By.TAG_NAME, "body").send_keys(Keys.END)
     #     sleep(5)  # Wait for content to load
 
-    scroll_down(driver, 5)
+    sleep(10)
 
     # Extract job titles and skills (modify as needed)
     job_cards = driver.find_elements(By.CSS_SELECTOR, ".base-card")
@@ -84,6 +91,12 @@ def scrape_linkedin_jobs(keyword, num_pages):
             )
 
             company_name = company_element.text
+            
+            
+            if company_name.lower() in list(map(str.lower, ignore_companies)):
+                continue
+            
+            
             job_title = job_title_element.text
             # print(job_title, " ", company_name)
             job_link = description.get_attribute("href")
@@ -183,23 +196,10 @@ def extract_skills(description):
     return skills_list
 
 
-def scroll_down(driver, scroll_delay):
-    last_height = driver.execute_script("return document.body.scrollHeight")
-
-    while True:
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        new_height = driver.execute_script("return document.body.scrollHeight")
-        sleep(scroll_delay)
-
-        if new_height == last_height:
-            break
-        last_height = new_height
-
-
 # Main function
 if __name__ == "__main__":
     keyword = "software%20engineer"
-    num_pages = 1  # You can adjust the number of pages to scrape
+    num_pages = 2
 
     print("Starting LinkedIn scraper.")
     scraped_jobs = scrape_linkedin_jobs(keyword, num_pages)
