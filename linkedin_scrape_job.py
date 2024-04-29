@@ -37,7 +37,9 @@ ignore_companies = [
     "TEKsystems",
     "RemoteWorker US",
     "Accenture Federal Services",
-    "Jobot"
+    "Jobot",
+    "Crossover",
+    "Esyconnect"
 ]
 
 def scrape_linkedin_jobs(keyword, num_pages):
