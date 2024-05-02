@@ -40,7 +40,8 @@ ignore_companies = [
     "Jobot",
     "Crossover",
     "Esyconnect",
-    "RemoteWorker UK"
+    "RemoteWorker UK",
+    "Jobot Consulting"
 ]
 
 def scrape_linkedin_jobs(keyword, num_pages):
@@ -49,10 +50,10 @@ def scrape_linkedin_jobs(keyword, num_pages):
         columns=[
             "company_name",
             "job_title",
+            "extracted_skills",
             "job_link",
             "job_description",
-            "extracted_skills",
-            "date_scraped",
+            "date_scraped"
         ]
     )
 
@@ -170,6 +171,7 @@ def extract_skills(description):
         "Airflow",
         "Python",
         "JavaScript",
+        "TypeScript",
         "SQL",
         "Flask",
         "Django",
