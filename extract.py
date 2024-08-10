@@ -14,13 +14,25 @@ import time
 import pandas as pd
 from datetime import datetime
 from time import sleep
+import os
 
 
 now = datetime.now()
 date_time_format = now.strftime("%Y%m%d_%H%M%S")
 output_filename = f"li_data_{date_time_format}.csv"
 
-save_directory = f"~/scrapers/scraped_data/linkedin/{output_filename}"
+current_save_directory = "scraped_data"
+current_save_directory = os.path.join(current_save_directory, "linkedin")
+save_filename = ""
+
+if os.path.exists(current_save_directory):
+    save_filename = f"{current_save_directory}/{output_filename}"
+else:
+    os.makedirs(current_save_directory)
+    save_filename = f"{current_save_directory}/{output_filename}"
+        
+        
+print(save_filename)
 
 ignore_companies = [
     "minware",
@@ -74,36 +86,41 @@ def scrape_linkedin_jobs(keyword, num_pages):
     url = f"https://www.linkedin.com/jobs/search/?keywords={keyword}&{extra_param}"
     
     print(f"Scraping from: {url}")
-    
     driver.get(url)
-
-    j = 0
-    # Scroll to load more jobs (you may need to adjust the number of scrolls)
-    for _ in range(num_pages):
-        print("scroll ######",j)
-        j = j+1
+    
+    for _ in range(num_pages):       
+        # number of base-cards
+        job_cards_before_scroll = len(driver.find_elements(By.CSS_SELECTOR, ".base-card"))
+        
+        # scroll
         driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.END)
-        sleep(60)
-    
-    
-    
-    
+        sleep(10)
+        
+        # wait for new job cards to load by checking if the count changes
+        try: 
+            WebDriverWait(driver, 10).until(
+                lambda d: len(d.find_elements(By.CSS_SELECTOR, ".base-card")) > job_cards_before_scroll
+            )
+        except Exception as e:
+            # print(e)
+            continue
+
 
     job_cards = driver.find_elements(By.CSS_SELECTOR, ".base-card")
     for card in job_cards:
         try:
 
-            job_title_element = WebDriverWait(card, 60).until(
+            job_title_element = WebDriverWait(card, 10).until(
                 EC.presence_of_element_located(
                     (By.CSS_SELECTOR, ".base-search-card__title")
                 )
             )
-            company_element = WebDriverWait(card, 60).until(
+            company_element = WebDriverWait(card, 10).until(
                 EC.presence_of_element_located(
                     (By.CSS_SELECTOR, ".base-search-card__subtitle")
                 )
             )
-            description = WebDriverWait(card, 60).until(
+            description = WebDriverWait(card, 10).until(
                 EC.presence_of_element_located(
                     (By.CSS_SELECTOR, ".base-card__full-link")
                 )
@@ -150,7 +167,7 @@ def scrape_linkedin_jobs(keyword, num_pages):
 
 def extract_job_description(driver):
     try:
-        WebDriverWait(driver, 100).until(
+        WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, ".description"))
         )
 
@@ -170,14 +187,14 @@ def extract_job_description(driver):
 
 def expand_description(driver):
     try:
-        show_more_button = WebDriverWait(card, 60).until(
+        show_more_button = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located(
                 (By.CSS_SELECTOR, ".show-more-less-html__button")
             )
         )
 
         show_more_button.click()
-        time.sleep(100)
+        time.sleep(5)
     except Exception as e:
         pass 
 
@@ -206,5 +223,5 @@ if __name__ == "__main__":
     num_pages = 2
     print("Starting LinkedIn scraper.")
     scraped_jobs = scrape_linkedin_jobs(keyword, num_pages)
-    scraped_jobs.to_csv(save_directory, index=False)
+    scraped_jobs.to_csv(save_filename, index=False)
     print("Ending LinkedIn scraper")
