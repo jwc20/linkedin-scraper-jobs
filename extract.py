@@ -21,15 +21,23 @@ now = datetime.now()
 date_time_format = now.strftime("%Y%m%d_%H%M%S")
 output_filename = f"li_data_{date_time_format}.csv"
 
+
+cwd = os.getcwd()
+home_directory = "/home/cjw"
 current_save_directory = "scraped_data"
 current_save_directory = os.path.join(current_save_directory, "linkedin")
 save_filename = ""
 
+if cwd != home_directory:
+    cwd = "/home/cjw"
+    os.chdir(cwd)
+
+
 if os.path.exists(current_save_directory):
-    save_filename = f"{current_save_directory}/{output_filename}"
+    save_filename = f"~/{current_save_directory}/{output_filename}"
 else:
     os.makedirs(current_save_directory)
-    save_filename = f"{current_save_directory}/{output_filename}"
+    save_filename = f"~/{current_save_directory}/{output_filename}"
         
         
 print(save_filename)
@@ -74,6 +82,7 @@ def scrape_linkedin_jobs(keyword, num_pages):
     options = Options()
     options.add_argument("--headless") 
     
+    # TODO: fix chrome driver pathing
     chrome_driver_path = '/usr/local/bin/chromedriver-linux64/chromedriver'
     driver = webdriver.Chrome(service=Service(chrome_driver_path), options=options)
 
@@ -87,6 +96,7 @@ def scrape_linkedin_jobs(keyword, num_pages):
     
     print(f"Scraping from: {url}")
     driver.get(url)
+    
     
     for _ in range(num_pages):       
         # number of base-cards
@@ -106,10 +116,23 @@ def scrape_linkedin_jobs(keyword, num_pages):
             continue
 
 
+    # number_of_job_cards = driver.find_elements(By.CSS_SELECTOR, ".base-card")
+    
     job_cards = driver.find_elements(By.CSS_SELECTOR, ".base-card")
+    
+    try:
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, ".base-card")
+            )
+        )
+    except Exception as e:
+        print(e)
+        
+
+    
     for card in job_cards:
         try:
-
             job_title_element = WebDriverWait(card, 10).until(
                 EC.presence_of_element_located(
                     (By.CSS_SELECTOR, ".base-search-card__title")
@@ -220,7 +243,7 @@ def extract_skills(description):
 # Main function
 if __name__ == "__main__":
     keyword = "software%20engineer"
-    num_pages = 2
+    num_pages = 5
     print("Starting LinkedIn scraper.")
     scraped_jobs = scrape_linkedin_jobs(keyword, num_pages)
     scraped_jobs.to_csv(save_filename, index=False)
